@@ -16,6 +16,14 @@ local function generate_id(base_name)
   return string.format("%s_%s_%s", base_name, timestamp, random_suffix)
 end
 
+local function parse_filename(bufnr)
+  local buffer_path = vim.api.nvim_buf_get_name(bufnr)
+  -- ":t" gets the tail, ":r" removes the file extension
+  local base_name = vim.fn.fnamemodify(buffer_path, ":t:r")
+  -- handle filenames with spaces
+  return base_name:gsub("%s+", "_")
+end
+
 local function has_front_matter(bufnr)
   if not is_valid_buffer(bufnr) then
     vim.notify("Invalid buffer", vim.log.levels.ERROR)
@@ -44,12 +52,8 @@ local function has_front_matter(bufnr)
 end
 
 local function insert_front_matter(bufnr)
-  local buffer_path = vim.api.nvim_buf_get_name(bufnr)
-  -- ":t" gets the tail, ":r" removes the file extension
-  local base_name = vim.fn.fnamemodify(buffer_path, ":t:r")
-  -- handle filenames with spaces
-  base_name = base_name:gsub("%s+", "_")
-  local file_id = generate_id(base_name)
+  local file_name = parse_filename(bufnr)
+  local file_id = generate_id(file_name)
   local front_matter = { "---" }
   table.insert(front_matter, string.format("ID: %s", file_id))
   table.insert(front_matter, "---")
@@ -59,11 +63,8 @@ local function insert_front_matter(bufnr)
 end
 
 local function insert_id_field(bufnr)
-  local buffer_path = vim.api.nvim_buf_get_name(bufnr)
-  local base_name = vim.fn.fnamemodify(buffer_path, ":t:r")
-  -- handle filenames with spaces
-  base_name = base_name:gsub("%s+", "_")
-  local file_id = generate_id(base_name)
+  local file_name = parse_filename(bufnr)
+  local file_id = generate_id(file_name)
   local id_field = { string.format("ID: %s", file_id) }
   vim.api.nvim_buf_set_lines(bufnr, 1, 1, false, id_field)
 end
