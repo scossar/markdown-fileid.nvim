@@ -96,7 +96,6 @@ function M.ensure_file_id()
   end
 
   local id_key = get_id_key()
-  print("id key", id_key)
 
   local front_matter_exists = has_front_matter_start(bufnr)
   if not front_matter_exists then
