@@ -2,7 +2,7 @@
 
 A Neovim plugin that adds a file ID key/value pair to the front matter section of a markdown file. If the file doesn't have a front matter section, it will be added along with the ID field.
 
-The plugin is intended to solve the problem of needing a way of associating a (reasonably) permanent ID with a markdown file that may get renamed or moved within the file system. It's (soon to be) a dependency of (converse.nvim)[https://github.com/scossar/converse.nvim].
+The plugin is intended to solve the problem of associating a (reasonably) permanent ID with a markdown file that may get renamed or moved within the file system. It's (soon to be) a dependency of (converse.nvim)[https://github.com/scossar/converse.nvim].
 
 ## Requirements
 
