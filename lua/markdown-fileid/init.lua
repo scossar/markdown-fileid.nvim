@@ -1,8 +1,15 @@
-local config = require("markdown-meta.config")
+local config = require("markdown-fileid.config")
 local M = {}
 
 function M.setup(opts)
   config.setup(opts)
+end
+
+local options = config.options
+
+local function is_markdown_buffer(bufnr)
+  local ft = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
+  return ft == "markdown"
 end
 
 local function is_valid_buffer(bufnr)
@@ -24,54 +31,37 @@ local function parse_filename(bufnr)
   return base_name:gsub("%s+", "_")
 end
 
-local function has_front_matter(bufnr)
+local function has_front_matter_start(bufnr)
   if not is_valid_buffer(bufnr) then
     vim.notify("Invalid buffer", vim.log.levels.ERROR)
-    return
-  end
-
-  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, 10, false)
-
-  if #lines < 2 then
     return false
   end
 
-  if lines[1] ~= "---" then
-    return false
-  end
-
-  for i = 2, #lines do
-    if lines[i] == "---" then
-      local content = table.concat(lines, "\n", 2, i - 1)
-      if content:match("%S") then
-        return true
-      end
-    end
-  end
-  return false
+  local first_line = vim.api.nvim_buf_get_lines(bufnr, 0, 1, false)
+  return #first_line > 0 and first_line[1] == "---"
 end
 
-local function insert_front_matter(bufnr)
+local function insert_front_matter(bufnr, id_key)
   local file_name = parse_filename(bufnr)
   local file_id = generate_id(file_name)
   local front_matter = { "---" }
-  table.insert(front_matter, string.format("ID: %s", file_id))
+  table.insert(front_matter, string.format("%s: %s", id_key, file_id))
   table.insert(front_matter, "---")
   table.insert(front_matter, "")
   vim.api.nvim_buf_set_lines(bufnr, 0, 0, false, front_matter)
   return true
 end
 
-local function insert_id_field(bufnr)
+local function insert_id_field(bufnr, id_key)
   local file_name = parse_filename(bufnr)
   local file_id = generate_id(file_name)
-  local id_field = { string.format("ID: %s", file_id) }
+  local id_field = { string.format("%s: %s", id_key, file_id) }
   vim.api.nvim_buf_set_lines(bufnr, 1, 1, false, id_field)
 end
 
-function M.get_field(field_name, bufnr)
-  if not is_valid_buffer(bufnr) then
-    vim.notify("Invalid buffer", vim.log.levels.ERROR)
+function M.get_field(bufnr, field_name)
+  if not is_valid_buffer(bufnr) or not is_markdown_buffer(bufnr) then
+    vim.notify("Not a valid markdown buffer", vim.log.levels.ERROR)
     return
   end
 
@@ -79,7 +69,7 @@ function M.get_field(field_name, bufnr)
   local in_front_matter = false
 
   for _, line in ipairs(first_lines) do
-    if line:match("^%-%-%-") then
+    if line == "---" then
       in_front_matter = not in_front_matter
       goto continue
     end
@@ -96,26 +86,27 @@ function M.get_field(field_name, bufnr)
   return nil
 end
 
---- just hacking things together here
-function M.maybe_add_meta()
+function M.ensure_file_id()
   local bufnr = vim.api.nvim_get_current_buf()
-  if not is_valid_buffer(bufnr) then
-    vim.notify("Invalid buffer", vim.log.levels.ERROR)
+  if not is_valid_buffer(bufnr) or not is_markdown_buffer(bufnr) then
+    vim.notify("Not a valid markdown buffer", vim.log.levels.ERROR)
     return
   end
 
-  local front_matter_exists = has_front_matter(bufnr)
+  local id_key = options.id_key
+
+  local front_matter_exists = has_front_matter_start(bufnr)
   if not front_matter_exists then
-    insert_front_matter(bufnr)
+    insert_front_matter(bufnr, id_key)
     return true
   end
 
-  local id_exists = M.get_field("ID", bufnr)
+  local id_exists = M.get_field(bufnr, id_key)
   if id_exists then
     return true
   end
 
-  insert_id_field(bufnr)
+  insert_id_field(bufnr, id_key)
 
   return true
 end
