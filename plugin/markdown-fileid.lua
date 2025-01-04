@@ -5,11 +5,10 @@ vim.keymap.set("n", "<leader>pr", function()
 
   -- -- clear module cache
   package.loaded["markdown-fileid"] = nil
+  package.loaded["markdown-fileid"] = nil
   --
   -- -- reload and reconfigure
-  require("markdown-fileid").setup({
-    config = {},
-  })
+  require("markdown-fileid").setup({})
 
   vim.notify("Markdown-fileid reloaded")
 end, { desc = "Reload markdown-fileid" })

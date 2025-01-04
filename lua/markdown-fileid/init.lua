@@ -5,7 +5,9 @@ function M.setup(opts)
   config.setup(opts)
 end
 
-local options = config.options
+local function get_id_key()
+  return config.options.id_key
+end
 
 local function is_markdown_buffer(bufnr)
   local ft = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
@@ -93,7 +95,8 @@ function M.ensure_file_id()
     return
   end
 
-  local id_key = options.id_key
+  local id_key = get_id_key()
+  print("id key", id_key)
 
   local front_matter_exists = has_front_matter_start(bufnr)
   if not front_matter_exists then
