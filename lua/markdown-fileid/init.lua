@@ -5,7 +5,7 @@ function M.setup(opts)
   config.setup(opts)
 end
 
-local function get_id_key()
+function M.get_id_key()
   return config.options.id_key
 end
 
@@ -95,7 +95,7 @@ function M.ensure_file_id()
     return
   end
 
-  local id_key = get_id_key()
+  local id_key = M.get_id_key()
 
   local front_matter_exists = has_front_matter_start(bufnr)
   if not front_matter_exists then
